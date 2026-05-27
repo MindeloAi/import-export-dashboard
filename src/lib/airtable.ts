@@ -2,14 +2,15 @@ import { cache } from "react";
 import type { Contact, Deal, Product, Shipment } from "./types";
 
 // Table IDs in the "Import/Export Brokerage (Demo)" base.
-const TABLES = {
+// Exported so the write layer (lib/actions.ts) reuses the exact same IDs.
+export const TABLES = {
   contacts: "tblqHQPf4birbtktd",
   products: "tblOkNiDPynwtO5Hj",
   deals: "tbljjsHry9I3WIUzo",
   shipments: "tblRLFITYKf1mflgm",
 } as const;
 
-const BASE_ID = process.env.AIRTABLE_BASE_ID ?? "appmNmeqxOSiWTPud";
+export const BASE_ID = process.env.AIRTABLE_BASE_ID ?? "appmNmeqxOSiWTPud";
 const API_KEY = process.env.AIRTABLE_API_KEY;
 
 /** True once a Personal Access Token has been supplied via env. */
@@ -40,7 +41,9 @@ async function fetchAll(tableId: string): Promise<AirtableRecord[]> {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${API_KEY}` },
       // Re-fetch at most every 30s so edits in Airtable show up promptly.
-      next: { revalidate: 30 },
+      // The shared "airtable" tag lets a mutation invalidate every page at
+      // once via updateTag("airtable") (see lib/actions.ts).
+      next: { revalidate: 30, tags: ["airtable"] },
     });
 
     if (!res.ok) {
