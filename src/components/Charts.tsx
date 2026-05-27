@@ -27,7 +27,7 @@ export function MarginTrendChart({
   data: { month: string; margin: number }[];
 }) {
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={290}>
       <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="marginFill" x1="0" y1="0" x2="0" y2="1">
@@ -38,9 +38,11 @@ export function MarginTrendChart({
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
         <XAxis
           dataKey="month"
-          tick={{ fontSize: 12, fill: "#64748b" }}
+          tick={<AngledTick />}
+          height={56}
           axisLine={false}
           tickLine={false}
+          interval={0}
         />
         <YAxis
           tickFormatter={(v) => compact(v as number)}
@@ -69,6 +71,36 @@ export function MarginTrendChart({
   );
 }
 
+/**
+ * Angled X-axis tick — keeps every category label readable on narrow
+ * (mobile) widths where horizontal labels would overlap and jumble.
+ */
+function AngledTick({
+  x,
+  y,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value: string | number };
+}) {
+  return (
+    <g transform={`translate(${x ?? 0},${y ?? 0})`}>
+      <text
+        x={0}
+        y={0}
+        dy={10}
+        textAnchor="end"
+        transform="rotate(-35)"
+        fontSize={11}
+        fill="#64748b"
+      >
+        {payload?.value}
+      </text>
+    </g>
+  );
+}
+
 const STATUS_COLORS: Record<string, string> = {
   Lead: "#94a3b8",
   Negotiating: "#f59e0b",
@@ -85,12 +117,13 @@ export function PipelineChart({
   data: { status: string; value: number }[];
 }) {
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={290}>
       <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
         <XAxis
           dataKey="status"
-          tick={{ fontSize: 11, fill: "#64748b" }}
+          tick={<AngledTick />}
+          height={56}
           axisLine={false}
           tickLine={false}
           interval={0}
