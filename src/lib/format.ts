@@ -34,6 +34,12 @@ export function number(value: number | undefined): string {
   return new Intl.NumberFormat("en-US").format(value ?? 0);
 }
 
+/** Weight in kilograms, e.g. "18,450 kg". Returns "—" when empty. */
+export function weight(kg: number | undefined): string {
+  if (kg == null) return "—";
+  return `${number(kg)} kg`;
+}
+
 /** ISO date string -> "12 Feb 2026". Returns "—" when empty. */
 export function shortDate(iso: string | undefined): string {
   if (!iso) return "—";

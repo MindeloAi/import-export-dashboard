@@ -21,7 +21,7 @@ export function ContactsView({ contacts }: { contacts: Contact[] }) {
       if (type !== "All" && c.type !== type) return false;
       if (country !== "All" && c.country !== country) return false;
       if (!q) return true;
-      return [c.name, c.contactPerson, c.goodsCategory]
+      return [c.name, c.contactPerson, c.goodsCategory, c.city]
         .filter(Boolean)
         .some((v) => v!.toLowerCase().includes(q));
     });
@@ -72,9 +72,12 @@ export function ContactsView({ contacts }: { contacts: Contact[] }) {
               <th>Type</th>
               <th>Contact</th>
               <th>Country</th>
+              <th>City</th>
               <th>Goods</th>
+              <th>Terms</th>
               <th>Status</th>
               <th>Email</th>
+              <th>Website</th>
             </tr>
           </thead>
           <tbody>
@@ -86,7 +89,9 @@ export function ContactsView({ contacts }: { contacts: Contact[] }) {
                 </td>
                 <td>{c.contactPerson ?? "—"}</td>
                 <td>{c.country ?? "—"}</td>
+                <td>{c.city ?? "—"}</td>
                 <td>{c.goodsCategory ?? "—"}</td>
+                <td className="text-slate-500">{c.paymentTerms ?? "—"}</td>
                 <td>
                   <StatusBadge value={c.status} />
                 </td>
@@ -102,11 +107,25 @@ export function ContactsView({ contacts }: { contacts: Contact[] }) {
                     "—"
                   )}
                 </td>
+                <td>
+                  {c.website ? (
+                    <a
+                      href={c.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 hover:underline"
+                    >
+                      {c.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-10 text-center text-slate-400">
+                <td colSpan={10} className="py-10 text-center text-slate-400">
                   No contacts match your filters.
                 </td>
               </tr>

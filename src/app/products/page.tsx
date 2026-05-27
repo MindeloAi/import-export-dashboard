@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/PageHeader";
 import { SetupNotice } from "@/components/SetupNotice";
 import { getProducts, isAirtableConfigured } from "@/lib/airtable";
-import { moneyPrecise } from "@/lib/format";
+import { moneyPrecise, weight } from "@/lib/format";
 
 export default async function ProductsPage() {
   const description = "Catalog of goods brokered, with buy/sell margins.";
@@ -25,9 +25,12 @@ export default async function ProductsPage() {
             <thead>
               <tr>
                 <th>Product</th>
+                <th>HS Code</th>
                 <th>Category</th>
                 <th>Supplier</th>
+                <th>Origin</th>
                 <th>Unit</th>
+                <th className="num">Weight</th>
                 <th className="num">Buy price</th>
                 <th className="num">Sell price</th>
                 <th className="num">Margin / unit</th>
@@ -41,9 +44,14 @@ export default async function ProductsPage() {
                 return (
                   <tr key={p.id}>
                     <td className="font-medium text-slate-900">{p.product}</td>
+                    <td className="font-mono text-xs text-slate-500">
+                      {p.hsCode ?? "—"}
+                    </td>
                     <td>{p.category ?? "—"}</td>
                     <td>{p.supplier ?? "—"}</td>
+                    <td>{p.countryOfOrigin ?? "—"}</td>
                     <td className="text-slate-500">{p.unit ?? "—"}</td>
+                    <td className="num text-slate-500">{weight(p.weightKg)}</td>
                     <td className="num">{moneyPrecise(p.buyPrice)}</td>
                     <td className="num">{moneyPrecise(p.sellPrice)}</td>
                     <td className="num font-medium text-emerald-600">

@@ -19,6 +19,15 @@ const STYLES: Record<string, string> = {
   Both: "bg-fuchsia-100 text-fuchsia-800 ring-fuchsia-200",
   Active: "bg-emerald-100 text-emerald-800 ring-emerald-200",
   Inactive: "bg-slate-100 text-slate-500 ring-slate-200",
+  // Payment status
+  Unpaid: "bg-rose-100 text-rose-700 ring-rose-200",
+  "Deposit Paid": "bg-amber-100 text-amber-800 ring-amber-200",
+  Paid: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+  // Container type
+  "20ft": "bg-slate-100 text-slate-700 ring-slate-200",
+  "40ft": "bg-blue-100 text-blue-800 ring-blue-200",
+  "40HC": "bg-indigo-100 text-indigo-800 ring-indigo-200",
+  Reefer: "bg-teal-100 text-teal-800 ring-teal-200",
 };
 
 export function StatusBadge({ value }: { value?: string }) {

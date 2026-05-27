@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
-import { shortDate } from "@/lib/format";
+import { money, shortDate, weight } from "@/lib/format";
 import { SHIPMENT_STATUSES, type Shipment } from "@/lib/types";
 
 export function ShipmentsView({ shipments }: { shipments: Shipment[] }) {
@@ -14,7 +14,17 @@ export function ShipmentsView({ shipments }: { shipments: Shipment[] }) {
     return shipments.filter((s) => {
       if (status !== "All" && s.status !== status) return false;
       if (!q) return true;
-      return [s.reference, s.deal, s.originPort, s.destinationPort, s.carrier]
+      return [
+        s.reference,
+        s.deal,
+        s.originPort,
+        s.destinationPort,
+        s.originCountry,
+        s.destinationCountry,
+        s.carrier,
+        s.vessel,
+        s.billOfLading,
+      ]
         .filter(Boolean)
         .some((v) => v!.toLowerCase().includes(q));
     });
@@ -55,7 +65,12 @@ export function ShipmentsView({ shipments }: { shipments: Shipment[] }) {
               <th>Deal</th>
               <th>Route</th>
               <th>Carrier</th>
-              <th>Container</th>
+              <th>Vessel</th>
+              <th>Container No</th>
+              <th>B/L</th>
+              <th>Containers</th>
+              <th className="num">Gross wt.</th>
+              <th className="num">Freight</th>
               <th>Incoterm</th>
               <th>Status</th>
               <th>ETD</th>
@@ -71,10 +86,28 @@ export function ShipmentsView({ shipments }: { shipments: Shipment[] }) {
                   {s.originPort ?? "?"}{" "}
                   <span className="text-slate-400">→</span>{" "}
                   {s.destinationPort ?? "?"}
+                  {(s.originCountry || s.destinationCountry) && (
+                    <span className="block text-xs text-slate-400">
+                      {s.originCountry ?? "?"} → {s.destinationCountry ?? "?"}
+                    </span>
+                  )}
                 </td>
                 <td>{s.carrier ?? "—"}</td>
+                <td>{s.vessel ?? "—"}</td>
                 <td className="font-mono text-xs text-slate-500">
                   {s.containerNo ?? "—"}
+                </td>
+                <td className="font-mono text-xs text-slate-500">
+                  {s.billOfLading ?? "—"}
+                </td>
+                <td className="whitespace-nowrap text-slate-500">
+                  {s.containerCount
+                    ? `${s.containerCount} × ${s.containerType ?? "—"}`
+                    : "—"}
+                </td>
+                <td className="num">{weight(s.grossWeightKg)}</td>
+                <td className="num">
+                  {s.freightCost != null ? money(s.freightCost) : "—"}
                 </td>
                 <td className="text-slate-500">{s.incoterm ?? "—"}</td>
                 <td>
@@ -86,7 +119,7 @@ export function ShipmentsView({ shipments }: { shipments: Shipment[] }) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="py-10 text-center text-slate-400">
+                <td colSpan={14} className="py-10 text-center text-slate-400">
                   No shipments match your filters.
                 </td>
               </tr>

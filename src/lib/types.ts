@@ -4,6 +4,14 @@
 export type ContactType = "Supplier" | "Buyer" | "Both";
 export type ContactStatus = "Active" | "Inactive";
 
+/** Currencies used across deals and partner terms. */
+export const CURRENCIES = ["USD", "EUR", "GBP"] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
+/** Standard payment terms a trading partner might agree to. */
+export const PAYMENT_TERMS = ["Net 15", "Net 30", "Net 60", "CIA", "LC"] as const;
+export type PaymentTerms = (typeof PAYMENT_TERMS)[number];
+
 export interface Contact {
   id: string;
   name: string;
@@ -12,6 +20,12 @@ export interface Contact {
   email?: string;
   phone?: string;
   country?: string;
+  city?: string;
+  address?: string;
+  website?: string;
+  taxId?: string;
+  currency?: Currency;
+  paymentTerms?: PaymentTerms;
   goodsCategory?: string;
   status?: ContactStatus;
   notes?: string;
@@ -27,6 +41,9 @@ export interface Product {
   supplier?: string;
   buyPrice?: number;
   sellPrice?: number;
+  hsCode?: string;
+  countryOfOrigin?: string;
+  weightKg?: number;
   notes?: string;
 }
 
@@ -57,6 +74,14 @@ export const ACTIVE_DEAL_STATUSES: DealStatus[] = [
   "Shipped",
 ];
 
+/** Where a deal sits on getting paid. */
+export const PAYMENT_STATUSES = ["Unpaid", "Deposit Paid", "Paid"] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+/** Incoterms that set who pays freight/insurance and where risk transfers. */
+export const INCOTERMS = ["EXW", "FOB", "CIF", "DDP"] as const;
+export type Incoterm = (typeof INCOTERMS)[number];
+
 export interface Deal {
   id: string;
   deal: string;
@@ -67,6 +92,12 @@ export interface Deal {
   buyTotal?: number;
   sellTotal?: number;
   status?: DealStatus;
+  originCountry?: string;
+  destinationCountry?: string;
+  commissionRate?: number;
+  incoterm?: Incoterm;
+  paymentStatus?: PaymentStatus;
+  currency?: Currency;
   dateOpened?: string;
   expectedClose?: string;
   notes?: string;
@@ -87,6 +118,10 @@ export const SHIPMENT_STATUSES: ShipmentStatus[] = [
   "Delivered",
 ];
 
+/** Common ocean-freight container types. */
+export const CONTAINER_TYPES = ["20ft", "40ft", "40HC", "Reefer"] as const;
+export type ContainerType = (typeof CONTAINER_TYPES)[number];
+
 export interface Shipment {
   id: string;
   reference: string;
@@ -94,9 +129,17 @@ export interface Shipment {
   status?: ShipmentStatus;
   originPort?: string;
   destinationPort?: string;
+  originCountry?: string;
+  destinationCountry?: string;
   carrier?: string;
+  vessel?: string;
   containerNo?: string;
-  incoterm?: string;
+  billOfLading?: string;
+  grossWeightKg?: number;
+  containerCount?: number;
+  containerType?: ContainerType;
+  freightCost?: number;
+  incoterm?: Incoterm;
   etd?: string;
   eta?: string;
   notes?: string;
