@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TradeBridge — Import/Export Brokerage Dashboard
 
-## Getting Started
+A back-office dashboard for an import/export **middleman**: the broker who sources
+goods from suppliers, sells them to buyers, and earns the margin. Built with
+**Next.js 16 (App Router) + TypeScript + Tailwind CSS**, reading from **Airtable**.
 
-First, run the development server:
+> Demo project. Data is read-only and served from a seeded Airtable base.
+
+## Pages
+
+| Page          | What it shows                                                        |
+| ------------- | -------------------------------------------------------------------- |
+| **Overview**  | KPI cards (open pipeline value, realized margin, partners, shipments in transit) plus a margin-over-time area chart and a deal-value-by-stage funnel. |
+| **Deals**     | Every brokered transaction with buy/sell totals, computed margin & %, status, searchable and filterable by stage. |
+| **Contacts**  | Supplier/buyer directory, filterable by type and country.            |
+| **Products**  | Catalog of goods with buy/sell prices and computed unit margin/markup. |
+| **Shipments** | Freight tracker per deal — route, carrier, container, Incoterm, ETD/ETA, filterable by status. |
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # then add your Airtable token
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable           | Description                                                              |
+| ------------------ | ------------------------------------------------------------------------ |
+| `AIRTABLE_API_KEY` | Airtable Personal Access Token with `data.records:read` scope on the base. Create one at https://airtable.com/create/tokens. |
+| `AIRTABLE_BASE_ID` | The demo base ID (defaults to `appfdM6tTVM0vFhrb`).                       |
 
-## Learn More
+Until `AIRTABLE_API_KEY` is set, every page renders a setup notice instead of data,
+so the UI shell is always viewable.
 
-To learn more about Next.js, take a look at the following resources:
+## Airtable schema
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Base: **Import/Export Brokerage (Demo)** — four tables.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Contacts** — Name, Type (Supplier/Buyer/Both), Contact Person, Email, Phone, Country, Goods Category, Status, Notes
+- **Products** — Product, Category, Unit, Supplier, Buy Price, Sell Price, Notes
+- **Deals** — Deal, Supplier, Buyer, Product, Quantity, Buy Total, Sell Total, Status (Lead → Cancelled), Date Opened, Expected Close, Notes
+- **Shipments** — Reference, Deal, Status (Pending → Delivered), Origin/Destination Port, Carrier, Container No, Incoterm, ETD, ETA, Notes
 
-## Deploy on Vercel
+Margins are computed in the app (`src/lib/types.ts`) rather than stored, so prices
+stay the single source of truth.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/            # routes: / (overview), /deals, /contacts, /products, /shipments
+  components/     # Sidebar, KpiCard, StatusBadge, Charts, *View filters
+  lib/
+    airtable.ts   # typed read-only data access (one fn per table)
+    types.ts      # domain types + margin helpers
+    format.ts     # currency/date formatting
+```
+
+The data layer is read-only by design; create/edit can be layered on later via
+Route Handlers or Server Actions without changing the page structure.

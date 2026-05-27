@@ -1,65 +1,168 @@
-import Image from "next/image";
+import { KpiCard } from "@/components/KpiCard";
+import { PageHeader } from "@/components/PageHeader";
+import { SetupNotice } from "@/components/SetupNotice";
+import { MarginTrendChart, PipelineChart } from "@/components/Charts";
+import { StatusBadge } from "@/components/StatusBadge";
+import { getContacts, getDeals, getShipments, isAirtableConfigured } from "@/lib/airtable";
+import { compactMoney, money, shortDate } from "@/lib/format";
+import {
+  ACTIVE_DEAL_STATUSES,
+  DEAL_STATUSES,
+  dealMargin,
+  type Deal,
+} from "@/lib/types";
 
-export default function Home() {
+export default async function OverviewPage() {
+  if (!isAirtableConfigured()) {
+    return (
+      <>
+        <PageHeader title="Overview" description="Brokerage performance at a glance." />
+        <SetupNotice />
+      </>
+    );
+  }
+
+  const [deals, contacts, shipments] = await Promise.all([
+    getDeals(),
+    getContacts(),
+    getShipments(),
+  ]);
+
+  const isActive = (d: Deal) =>
+    d.status !== undefined && ACTIVE_DEAL_STATUSES.includes(d.status);
+  const isRealized = (d: Deal) =>
+    d.status === "Delivered" || d.status === "Closed";
+
+  const pipelineValue = deals
+    .filter(isActive)
+    .reduce((sum, d) => sum + (d.sellTotal ?? 0), 0);
+  const realizedMargin = deals
+    .filter(isRealized)
+    .reduce((sum, d) => sum + dealMargin(d), 0);
+  const activeCount = deals.filter(isActive).length;
+  const suppliers = contacts.filter(
+    (c) => c.type === "Supplier" || c.type === "Both",
+  ).length;
+  const buyers = contacts.filter(
+    (c) => c.type === "Buyer" || c.type === "Both",
+  ).length;
+  const inTransit = shipments.filter((s) => s.status === "In Transit").length;
+
+  // Margin by month, from realized deals, sorted chronologically.
+  const monthBuckets = new Map<string, { label: string; margin: number }>();
+  for (const d of deals.filter(isRealized)) {
+    if (!d.dateOpened) continue;
+    const date = new Date(d.dateOpened);
+    if (Number.isNaN(date.getTime())) continue;
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const label = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    const bucket = monthBuckets.get(key) ?? { label, margin: 0 };
+    bucket.margin += dealMargin(d);
+    monthBuckets.set(key, bucket);
+  }
+  const marginTrend = [...monthBuckets.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, v]) => ({ month: v.label, margin: v.margin }));
+
+  // Deal value by status (excludes cancelled), in pipeline order.
+  const pipelineData = DEAL_STATUSES.filter((s) => s !== "Cancelled").map(
+    (status) => ({
+      status,
+      value: deals
+        .filter((d) => d.status === status)
+        .reduce((sum, d) => sum + (d.sellTotal ?? 0), 0),
+    }),
+  );
+
+  const recentDeals = [...deals]
+    .sort((a, b) => (b.dateOpened ?? "").localeCompare(a.dateOpened ?? ""))
+    .slice(0, 6);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <PageHeader
+        title="Overview"
+        description="Brokerage performance at a glance."
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Open pipeline value"
+          value={compactMoney(pipelineValue)}
+          sub={`${activeCount} active deals`}
+          accent="indigo"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        <KpiCard
+          label="Realized margin"
+          value={compactMoney(realizedMargin)}
+          sub="Delivered & closed deals"
+          accent="emerald"
+        />
+        <KpiCard
+          label="Trading partners"
+          value={`${suppliers + buyers}`}
+          sub={`${suppliers} suppliers · ${buyers} buyers`}
+          accent="teal"
+        />
+        <KpiCard
+          label="Shipments in transit"
+          value={`${inTransit}`}
+          sub={`${shipments.length} total shipments`}
+          accent="amber"
+        />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Realized margin over time
+          </h2>
+          <p className="mb-3 text-xs text-slate-400">By deal open month</p>
+          <MarginTrendChart data={marginTrend} />
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Deal value by stage
+          </h2>
+          <p className="mb-3 text-xs text-slate-400">Pipeline funnel</p>
+          <PipelineChart data={pipelineData} />
+        </section>
+      </div>
+
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between px-5 py-4">
+          <h2 className="text-sm font-semibold text-slate-700">Recent deals</h2>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="overflow-x-auto">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Deal</th>
+                <th>Buyer</th>
+                <th>Status</th>
+                <th className="num">Value</th>
+                <th className="num">Margin</th>
+                <th>Opened</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentDeals.map((d) => (
+                <tr key={d.id}>
+                  <td className="font-medium text-slate-900">{d.deal}</td>
+                  <td>{d.buyer ?? "—"}</td>
+                  <td>
+                    <StatusBadge value={d.status} />
+                  </td>
+                  <td className="num">{money(d.sellTotal)}</td>
+                  <td className="num text-emerald-600">{money(dealMargin(d))}</td>
+                  <td>{shortDate(d.dateOpened)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </main>
-    </div>
+      </section>
+    </>
   );
 }
