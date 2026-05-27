@@ -31,7 +31,7 @@ Open http://localhost:3000.
 | Variable           | Description                                                              |
 | ------------------ | ------------------------------------------------------------------------ |
 | `AIRTABLE_API_KEY` | Airtable Personal Access Token with `data.records:read` scope on the base. Create one at https://airtable.com/create/tokens. |
-| `AIRTABLE_BASE_ID` | The demo base ID (defaults to `appfdM6tTVM0vFhrb`).                       |
+| `AIRTABLE_BASE_ID` | The demo base ID (defaults to `appmNmeqxOSiWTPud`).                       |
 
 Until `AIRTABLE_API_KEY` is set, every page renders a setup notice instead of data,
 so the UI shell is always viewable.

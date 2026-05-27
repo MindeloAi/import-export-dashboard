@@ -3,13 +3,13 @@ import type { Contact, Deal, Product, Shipment } from "./types";
 
 // Table IDs in the "Import/Export Brokerage (Demo)" base.
 const TABLES = {
-  contacts: "tblQZqLBsgzWaC6sj",
-  products: "tblMXxQB9ZY3617RB",
-  deals: "tbls9FsH4PtZXPrZl",
-  shipments: "tblM4KuTjvUfogjls",
+  contacts: "tblqHQPf4birbtktd",
+  products: "tblOkNiDPynwtO5Hj",
+  deals: "tbljjsHry9I3WIUzo",
+  shipments: "tblRLFITYKf1mflgm",
 } as const;
 
-const BASE_ID = process.env.AIRTABLE_BASE_ID ?? "appfdM6tTVM0vFhrb";
+const BASE_ID = process.env.AIRTABLE_BASE_ID ?? "appmNmeqxOSiWTPud";
 const API_KEY = process.env.AIRTABLE_API_KEY;
 
 /** True once a Personal Access Token has been supplied via env. */
