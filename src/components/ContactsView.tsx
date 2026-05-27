@@ -35,7 +35,7 @@ export function ContactsView({ contacts }: { contacts: Contact[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search partners…"
-          className="w-56 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 sm:w-56"
         />
         <select
           value={type}

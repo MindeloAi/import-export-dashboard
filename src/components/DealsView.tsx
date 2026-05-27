@@ -33,7 +33,7 @@ export function DealsView({ deals }: { deals: Deal[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search deals, partners, products…"
-          className="w-64 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 sm:w-64"
         />
         <select
           value={status}
